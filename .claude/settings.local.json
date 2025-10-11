@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(venvScripts:*)",
+      "Bash(pip install:*)",
+      "Bash(.venvScriptspython.exe -m pip install -r requirements.txt)",
+      "Bash(set PORT=3001)",
+      "Bash(npm start)",
+      "Bash(taskkill:*)",
+      "Bash(cmd /c:*)",
+      "Bash(START_APP.bat)",
+      "Bash(npm install:*)",
+      "Bash(copy:*)",
+      "Bash(dir:*)",
+      "Bash(if exist nul del /f nul)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git remote add:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(git init:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

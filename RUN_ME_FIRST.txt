@@ -1,0 +1,37 @@
+═══════════════════════════════════════════════════════
+   HOW TO RUN NEGGES AI - PUBLIC SPEAKING COACH
+═══════════════════════════════════════════════════════
+
+📋 SUPER SIMPLE STEPS:
+
+STEP 1: START BACKEND
+   → Double-click: start_backend.bat
+   → Wait until you see: "Running on http://127.0.0.1:5000"
+   → KEEP THIS WINDOW OPEN!
+
+STEP 2: START FRONTEND
+   → Double-click: start_frontend.bat
+   → Browser will open automatically
+   → KEEP THIS WINDOW OPEN TOO!
+
+STEP 3: USE THE APP
+   → Click "Allow" for camera and microphone
+   → Click "Start Analysis"
+   → Start speaking!
+
+═══════════════════════════════════════════════════════
+
+⚠️  IMPORTANT:
+   • First time setup takes 3-5 minutes
+   • Both windows must stay open
+   • Use Chrome or Edge browser
+   • Allow camera/microphone permissions
+
+═══════════════════════════════════════════════════════
+
+📖 MORE HELP:
+   • See HOW_TO_RUN.md for detailed instructions
+   • See QUICK_START.md for manual commands
+   • See README.md for full documentation
+
+═══════════════════════════════════════════════════════

@@ -1,3 +1,11 @@
+"""
+SpeakSense AI - AI-Powered Public Speaking Analysis
+Copyright (c) 2025 Naman Sharma. All rights reserved.
+
+This application uses MediaPipe, OpenCV, and AI to analyze public speaking
+performance including gestures, body language, and speech patterns.
+"""
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import cv2

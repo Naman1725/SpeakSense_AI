@@ -947,6 +947,11 @@ function App() {
           )}
         </div>
       </div>
+
+      {/* Copyright Footer */}
+      <footer className="app-footer">
+        <p>© 2025 Naman Sharma. All rights reserved. | SpeakSense AI - Empowering Better Communication</p>
+      </footer>
     </div>
   );
 }

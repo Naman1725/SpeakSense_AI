@@ -1058,3 +1058,26 @@ body {
 .App > * {
   animation: fadeIn 0.5s ease-out;
 }
+
+/* Copyright Footer */
+.app-footer {
+  margin-top: 40px;
+  padding: 24px;
+  text-align: center;
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(56, 189, 248, 0.1);
+  box-shadow: var(--shadow-lg);
+}
+
+.app-footer p {
+  color: var(--gray-400);
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: 0.3px;
+  background: linear-gradient(135deg, var(--gray-400) 0%, var(--gray-300) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}

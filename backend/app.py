@@ -17,11 +17,7 @@ app = Flask(__name__)
 
 # Configure CORS for production
 cors_origins = os.getenv('CORS_ORIGINS', 'http://localhost:3000').split(',')
-CORS(app,
-     resources={r"/api/*": {"origins": cors_origins}},
-     supports_credentials=True,
-     allow_headers=["Content-Type", "Authorization"],
-     methods=["GET", "POST", "OPTIONS"])
+CORS(app, origins=cors_origins)
 
 # Hugging Face API Configuration
 HF_API_KEY = os.getenv('HF_API_KEY')
@@ -35,7 +31,7 @@ mp_face_mesh = mp.solutions.face_mesh
 
 pose = mp_pose.Pose(
     static_image_mode=False,
-    model_complexity=0,  # Reduced from 2 to 0 for faster processing
+    model_complexity=2,
     smooth_landmarks=True,
     min_detection_confidence=0.5,
     min_tracking_confidence=0.5
@@ -44,14 +40,14 @@ pose = mp_pose.Pose(
 hands = mp_hands.Hands(
     static_image_mode=False,
     max_num_hands=2,
-    min_detection_confidence=0.5,  # Reduced from 0.7 for faster detection
+    min_detection_confidence=0.7,
     min_tracking_confidence=0.5
 )
 
 face_mesh = mp_face_mesh.FaceMesh(
     static_image_mode=False,
     max_num_faces=1,
-    refine_landmarks=False,  # Disabled for better performance
+    refine_landmarks=True,
     min_detection_confidence=0.5,
     min_tracking_confidence=0.5
 )
@@ -410,10 +406,6 @@ def analyze_frame():
         # Decode base64 image
         image_bytes = base64.b64decode(image_data.split(',')[1])
         image = Image.open(BytesIO(image_bytes))
-
-        # Resize image for faster processing (reduce to 50% of original size)
-        image = image.resize((image.width // 2, image.height // 2), Image.LANCZOS)
-
         frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
 
         # Process with MediaPipe

@@ -17,7 +17,11 @@ app = Flask(__name__)
 
 # Configure CORS for production
 cors_origins = os.getenv('CORS_ORIGINS', 'http://localhost:3000').split(',')
-CORS(app, origins=cors_origins)
+CORS(app,
+     resources={r"/api/*": {"origins": cors_origins}},
+     supports_credentials=True,
+     allow_headers=["Content-Type", "Authorization"],
+     methods=["GET", "POST", "OPTIONS"])
 
 # Hugging Face API Configuration
 HF_API_KEY = os.getenv('HF_API_KEY')

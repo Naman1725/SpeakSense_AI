@@ -31,7 +31,7 @@ mp_face_mesh = mp.solutions.face_mesh
 
 pose = mp_pose.Pose(
     static_image_mode=False,
-    model_complexity=2,
+    model_complexity=0,  # Reduced from 2 to 0 for faster processing
     smooth_landmarks=True,
     min_detection_confidence=0.5,
     min_tracking_confidence=0.5
@@ -40,14 +40,14 @@ pose = mp_pose.Pose(
 hands = mp_hands.Hands(
     static_image_mode=False,
     max_num_hands=2,
-    min_detection_confidence=0.7,
+    min_detection_confidence=0.5,  # Reduced from 0.7 for faster detection
     min_tracking_confidence=0.5
 )
 
 face_mesh = mp_face_mesh.FaceMesh(
     static_image_mode=False,
     max_num_faces=1,
-    refine_landmarks=True,
+    refine_landmarks=False,  # Disabled for better performance
     min_detection_confidence=0.5,
     min_tracking_confidence=0.5
 )
@@ -406,6 +406,10 @@ def analyze_frame():
         # Decode base64 image
         image_bytes = base64.b64decode(image_data.split(',')[1])
         image = Image.open(BytesIO(image_bytes))
+
+        # Resize image for faster processing (reduce to 50% of original size)
+        image = image.resize((image.width // 2, image.height // 2), Image.LANCZOS)
+
         frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
 
         # Process with MediaPipe

@@ -124,6 +124,22 @@ function socialLogin(provider) {
     */
 }
 
+// Handle guest login
+function enterAsGuest() {
+    // Create guest user data
+    const userData = {
+        email: 'guest@speaksense.ai',
+        name: 'Guest User',
+        loginTime: new Date().toISOString(),
+        provider: 'guest'
+    };
+
+    localStorage.setItem('demoUser', JSON.stringify(userData));
+
+    // Redirect to dashboard
+    window.location.href = 'dashboard.html';
+}
+
 // Handle signup link
 function showSignup(e) {
     e.preventDefault();

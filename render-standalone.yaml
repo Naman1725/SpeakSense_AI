@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: speaksense-demo
+    env: static
+    rootDir: standalone-demo
+    buildCommand: echo "No build needed - static files"
+    staticPublishPath: ./
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=0, must-revalidate

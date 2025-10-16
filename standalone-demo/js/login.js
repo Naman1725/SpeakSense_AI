@@ -18,16 +18,18 @@ function togglePassword() {
 document.getElementById('loginForm').addEventListener('submit', function(e) {
     e.preventDefault();
 
+    const name = document.getElementById('name').value;
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
     const remember = document.getElementById('remember').checked;
 
-    // Store demo user data
+    // Store user data with actual name
     const userData = {
         email: email,
-        name: 'Demo User',
+        name: name, // Use actual user's name
         loginTime: new Date().toISOString(),
-        remember: remember
+        remember: remember,
+        provider: 'email'
     };
 
     localStorage.setItem('demoUser', JSON.stringify(userData));
@@ -36,12 +38,35 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
     window.location.href = 'dashboard.html';
 });
 
+// OAuth Configuration (Demo - in production use real OAuth)
+const oauthConfig = {
+    google: {
+        clientId: 'YOUR_GOOGLE_CLIENT_ID',
+        name: prompt('Enter your name for Google login:') || 'Google User'
+    },
+    github: {
+        clientId: 'YOUR_GITHUB_CLIENT_ID',
+        name: prompt('Enter your name for GitHub login:') || 'GitHub User'
+    },
+    linkedin: {
+        clientId: 'YOUR_LINKEDIN_CLIENT_ID',
+        name: prompt('Enter your name for LinkedIn login:') || 'LinkedIn User'
+    },
+    facebook: {
+        clientId: 'YOUR_FACEBOOK_APP_ID',
+        name: prompt('Enter your name for Facebook login:') || 'Facebook User'
+    }
+};
+
 // Handle social login
 function socialLogin(provider) {
-    // Store demo user data
+    // Get user's name via prompt (in demo mode)
+    const userName = oauthConfig[provider].name;
+
+    // Store user data with actual name from OAuth
     const userData = {
-        email: `demo@${provider}.com`,
-        name: 'Demo User',
+        email: `${userName.toLowerCase().replace(/\s+/g, '.')}@${provider}.com`,
+        name: userName,
         provider: provider,
         loginTime: new Date().toISOString()
     };
@@ -54,10 +79,49 @@ function socialLogin(provider) {
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Connecting...</span>';
     btn.disabled = true;
 
-    // Simulate authentication delay
+    // Simulate OAuth authentication delay
     setTimeout(() => {
         window.location.href = 'dashboard.html';
     }, 1500);
+
+    /*
+    // PRODUCTION OAUTH CODE (uncomment for real implementation):
+
+    if (provider === 'google') {
+        // Google OAuth 2.0
+        const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+            `client_id=${oauthConfig.google.clientId}` +
+            `&redirect_uri=${encodeURIComponent(window.location.origin + '/dashboard.html')}` +
+            `&response_type=token` +
+            `&scope=profile email`;
+        window.location.href = googleAuthUrl;
+    }
+    else if (provider === 'github') {
+        // GitHub OAuth
+        const githubAuthUrl = `https://github.com/login/oauth/authorize?` +
+            `client_id=${oauthConfig.github.clientId}` +
+            `&redirect_uri=${encodeURIComponent(window.location.origin + '/dashboard.html')}` +
+            `&scope=user:email`;
+        window.location.href = githubAuthUrl;
+    }
+    else if (provider === 'linkedin') {
+        // LinkedIn OAuth 2.0
+        const linkedinAuthUrl = `https://www.linkedin.com/oauth/v2/authorization?` +
+            `response_type=code` +
+            `&client_id=${oauthConfig.linkedin.clientId}` +
+            `&redirect_uri=${encodeURIComponent(window.location.origin + '/dashboard.html')}` +
+            `&scope=r_liteprofile r_emailaddress`;
+        window.location.href = linkedinAuthUrl;
+    }
+    else if (provider === 'facebook') {
+        // Facebook OAuth
+        const facebookAuthUrl = `https://www.facebook.com/v12.0/dialog/oauth?` +
+            `client_id=${oauthConfig.facebook.clientId}` +
+            `&redirect_uri=${encodeURIComponent(window.location.origin + '/dashboard.html')}` +
+            `&scope=email,public_profile`;
+        window.location.href = facebookAuthUrl;
+    }
+    */
 }
 
 // Handle signup link

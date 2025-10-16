@@ -3,122 +3,14 @@ import axios from 'axios';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
 import { generatePDFReport, exportToJSON, exportToCSV } from './reportGenerator';
-import { showSuccess, showError, showInfo, showWarning } from './utils/toastHelper';
-import { saveSession, getSessionHistory, getSessionStats } from './utils/sessionHistory';
-import { analyzeSentiment, analyzePauses } from './utils/sentimentAnalysis';
-import { getRandomTopic, getTimerPresets } from './utils/practiceTopics';
-import { checkAchievements } from './utils/achievements';
-import AnimatedCounter from './components/AnimatedCounter';
-import Login from './components/Login';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-
-// Grammar and vocabulary checking functions
-const analyzeGrammar = (text) => {
-  const mistakes = [];
-  const patterns = [
-    // Capitalization
-    { pattern: /\bi\s/g, correct: 'I ', issue: 'Lowercase "i" should be capitalized' },
-    { pattern: /\bi'm\b/g, correct: "I'm", issue: 'Capitalize "I" in contractions' },
-
-    // Common grammar mistakes
-    { pattern: /\b(should|would|could)\s+of\b/gi, correct: 'should/would/could have', issue: 'Use "have" not "of" after modal verbs' },
-    { pattern: /\bthere\s+(is|are)\s+a\s+lot\s+of\b/gi, correct: 'there are many / there is much', issue: 'Use "many" or "much" instead of "a lot of"' },
-    { pattern: /\byour\s+(going|gonna|leaving|coming)\b/gi, correct: "you're", issue: 'Use "you\'re" (you are) not "your" (possessive)' },
-    { pattern: /\bits\s+(a|the|an|my|your|his|her)\b/gi, correct: "it's", issue: 'Use "it\'s" (it is) not "its" (possessive)' },
-
-    // Subject-verb agreement
-    { pattern: /\b(he|she|it)\s+(don't|have|do)\b/gi, correct: "doesn't/has/does", issue: 'Subject-verb agreement error' },
-    { pattern: /\b(I|we|they)\s+(doesn't|has|does)\b/gi, correct: "don't/have/do", issue: 'Subject-verb agreement error' },
-
-    // Double negatives
-    { pattern: /\bdon't\s+(have|got|want)\s+no\b/gi, correct: "don't have any", issue: 'Avoid double negatives' },
-    { pattern: /\bcan't\s+hardly\b/gi, correct: "can hardly", issue: 'Avoid double negatives' },
-
-    // Common confusions
-    { pattern: /\bthen\s+(I|we|you|they|he|she)\s+(am|is|are|was|were)\b/gi, correct: 'than', issue: 'Use "than" for comparisons, "then" for time' },
-    { pattern: /\bmore\s+better\b/gi, correct: 'better', issue: 'Use "better" alone (already comparative)' },
-    { pattern: /\bvery\s+unique\b/gi, correct: 'unique', issue: '"Unique" means one of a kind, no degree needed' },
-
-    // Redundancies
-    { pattern: /\bfree\s+gift\b/gi, correct: 'gift', issue: 'Redundant - gifts are inherently free' },
-    { pattern: /\bpast\s+history\b/gi, correct: 'history', issue: 'Redundant - history is always in the past' },
-    { pattern: /\badvance\s+planning\b/gi, correct: 'planning', issue: 'Redundant - planning is always in advance' },
-  ];
-
-  patterns.forEach(({pattern, correct, issue}) => {
-    const matches = text.matchAll(pattern);
-    for (const match of matches) {
-      mistakes.push({
-        text: match[0],
-        issue,
-        suggestion: correct,
-        position: match.index
-      });
-    }
-  });
-
-  return mistakes;
-};
-
-const analyzeVocabulary = (text) => {
-  const issues = [];
-  const weakWords = [
-    // Overused intensifiers
-    { word: /\bvery\s+(\w+)/gi, issue: 'Overused intensifier', suggestion: 'Replace with stronger word (e.g., "very good" → "excellent")' },
-    { word: /\b(really|extremely|super)\s+/gi, issue: 'Overused intensifier', suggestion: 'Use more precise descriptive words' },
-    { word: /\b(actually|basically|literally)\s+/gi, issue: 'Filler word', suggestion: 'Often unnecessary, consider removing' },
-
-    // Vague language
-    { word: /\b(thing|stuff|things|stuffs)\b/gi, issue: 'Vague noun', suggestion: 'Be specific - what exactly are you referring to?' },
-    { word: /\b(something|someone|somewhere)\b/gi, issue: 'Vague reference', suggestion: 'Specify what/who/where when possible' },
-
-    // Weak adjectives
-    { word: /\bgood\b/gi, issue: 'Generic adjective', suggestion: 'Try: excellent, beneficial, effective, valuable' },
-    { word: /\bbad\b/gi, issue: 'Generic adjective', suggestion: 'Try: poor, ineffective, detrimental, problematic' },
-    { word: /\bnice\b/gi, issue: 'Generic adjective', suggestion: 'Try: pleasant, delightful, impressive, appealing' },
-    { word: /\bbig\b/gi, issue: 'Generic adjective', suggestion: 'Try: substantial, significant, considerable, extensive' },
-    { word: /\bsmall\b/gi, issue: 'Generic adjective', suggestion: 'Try: minor, modest, limited, minimal' },
-
-    // Overused verbs
-    { word: /\b(got|get|gets|getting)\b/gi, issue: 'Overused verb', suggestion: 'Try: obtained, received, acquired, achieved, became' },
-    { word: /\bmake\b/gi, issue: 'Generic verb', suggestion: 'Try: create, develop, produce, generate, construct' },
-    { word: /\bdo\b/gi, issue: 'Generic verb', suggestion: 'Try: perform, execute, accomplish, complete' },
-
-    // Informal language
-    { word: /\b(like|kinda|sorta|kind of|sort of)\b/gi, issue: 'Informal filler', suggestion: 'Use formal alternatives or remove entirely' },
-    { word: /\b(yeah|yep|nope|gonna|wanna|gotta)\b/gi, issue: 'Informal language', suggestion: 'Use: yes, no, going to, want to, have to' },
-
-    // Hedging language (overuse weakens message)
-    { word: /\b(maybe|perhaps|possibly|probably)\b/gi, issue: 'Hedging language', suggestion: 'Be more decisive when appropriate' },
-    { word: /\bi think\b/gi, issue: 'Tentative phrase', suggestion: 'State your point directly for more impact' },
-    { word: /\bi guess\b/gi, issue: 'Uncertain language', suggestion: 'Express confidence in your statements' },
-  ];
-
-  weakWords.forEach(({word, issue, suggestion}) => {
-    const matches = text.matchAll(word);
-    for (const match of matches) {
-      issues.push({
-        text: match[0],
-        issue,
-        suggestion,
-        position: match.index
-      });
-    }
-  });
-
-  return issues;
-};
 
 const COLORS = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe'];
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [gestures, setGestures] = useState([]);
   const [speechAnalysis, setSpeechAnalysis] = useState(null);
@@ -136,15 +28,6 @@ function App() {
   const [isUploadMode, setIsUploadMode] = useState(false);
   const [uploadedVideo, setUploadedVideo] = useState(null);
   const [isProcessingVideo, setIsProcessingVideo] = useState(false);
-  const [grammarMistakes, setGrammarMistakes] = useState([]);
-  const [vocabularyIssues, setVocabularyIssues] = useState([]);
-  const [sentimentData, setSentimentData] = useState(null);
-  const [pauseAnalysisData, setPauseAnalysisData] = useState(null);
-  const [practiceTopicActive, setPracticeTopicActive] = useState(false);
-  const [currentPracticeTopic, setCurrentPracticeTopic] = useState('');
-  const [sessionHistory, setSessionHistory] = useState([]);
-  const [achievementStats, setAchievementStats] = useState(null);
-  const [speechTimestamps, setSpeechTimestamps] = useState([]);
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -177,13 +60,11 @@ function App() {
   const initializeSpeechRecognition = () => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
       console.warn('Speech recognition not supported');
-      showWarning('⚠️ Speech recognition not supported in this browser. Please use Chrome or Edge.');
       return;
     }
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
-    console.log('Speech recognition initialized');
 
     recognition.continuous = true;
     recognition.interimResults = true;
@@ -200,7 +81,6 @@ function App() {
       }
 
       if (finalTranscript) {
-        console.log('Speech recognized:', finalTranscript);
         try {
           const response = await axios.post(`${API_URL}/analyze-audio`, {
             text: finalTranscript,
@@ -232,35 +112,6 @@ function App() {
             const timestamp = new Date(Date.now()).toLocaleTimeString();
             setTranscript(prev => [...prev, { timestamp, text: finalTranscript }]);
 
-            // Track speech timestamps for pause analysis
-            setSpeechTimestamps(prev => [...prev, Date.now() / 1000]);
-
-            // Analyze grammar and vocabulary
-            const grammar = analyzeGrammar(finalTranscript);
-            const vocab = analyzeVocabulary(finalTranscript);
-
-            // Analyze sentiment
-            const sentiment = analyzeSentiment(finalTranscript);
-            setSentimentData(sentiment);
-
-            if (grammar.length > 0) {
-              setGrammarMistakes(prev => {
-                const uniqueNew = grammar.filter(g =>
-                  !prev.some(p => p.text === g.text && p.issue === g.issue)
-                );
-                return [...prev, ...uniqueNew].slice(-10); // Keep last 10
-              });
-            }
-
-            if (vocab.length > 0) {
-              setVocabularyIssues(prev => {
-                const uniqueNew = vocab.filter(v =>
-                  !prev.some(p => p.text === v.text && p.issue === v.issue)
-                );
-                return [...prev, ...uniqueNew].slice(-15); // Keep last 15
-              });
-            }
-
             // Update confidence score based on speech metrics
             const newConfidence = Math.max(100 - (analysis.filler_percentage * 5), 0);
             setConfidenceScore(newConfidence);
@@ -274,19 +125,12 @@ function App() {
     recognition.onerror = (event) => {
       console.error('Speech recognition error:', event.error);
       if (event.error === 'no-speech') {
-        console.log('No speech detected, restarting...');
         recognition.stop();
         setTimeout(() => {
           if (isRecording) {
-            try {
-              recognition.start();
-            } catch (err) {
-              console.log('Error restarting recognition:', err);
-            }
+            recognition.start();
           }
         }, 1000);
-      } else if (event.error === 'not-allowed') {
-        showError('Microphone access denied. Please allow microphone access.');
       }
     };
 
@@ -524,8 +368,6 @@ function App() {
     setBodyLanguageScore(100);
     setGestureTimeline([]);
     setSessionDuration(0);
-    setGrammarMistakes([]);
-    setVocabularyIssues([]);
     sessionStartTime.current = Date.now();
 
     // Reset session
@@ -578,8 +420,6 @@ function App() {
     setBodyLanguageScore(100);
     setGestureTimeline([]);
     setSessionDuration(0);
-    setGrammarMistakes([]);
-    setVocabularyIssues([]);
     sessionStartTime.current = Date.now();
 
     // Reset session
@@ -589,13 +429,9 @@ function App() {
     if (recognitionRef.current) {
       try {
         recognitionRef.current.start();
-        console.log('Speech recognition started');
-        showInfo('🎤 Listening for speech...');
       } catch (err) {
-        console.log('Recognition already started or error:', err);
+        console.log('Recognition already started');
       }
-    } else {
-      showWarning('⚠️ Speech recognition not available. Please use Chrome or Edge browser.');
     }
 
     // Start frame analysis (every 1 second)
@@ -634,71 +470,10 @@ function App() {
 
       if (response.data.success) {
         setOverallScore(response.data.summary);
-
-        // Analyze pauses
-        const pauseAnalysis = analyzePauses(speechTimestamps);
-        setPauseAnalysisData(pauseAnalysis);
-
-        // Save session to history
-        const sessionData = {
-          sessionId,
-          duration: sessionDuration,
-          overallScore: response.data.summary.overall_score || 0,
-          speechAnalysis: {
-            totalWords: response.data.summary.total_words || 0,
-            fillerCount: response.data.summary.filler_count || 0,
-            fillerPercentage: response.data.summary.filler_percentage || 0,
-            averageWpm: wpmHistory.length > 0 ? Math.round(wpmHistory.reduce((sum, item) => sum + item.wpm, 0) / wpmHistory.length) : 0,
-          },
-          sentimentData,
-          pauseAnalysisData: pauseAnalysis,
-        };
-
-        const saved = saveSession(sessionData);
-        if (saved) {
-          showSuccess('🎉 Session completed and saved!');
-          // Load updated history
-          setSessionHistory(getSessionHistory());
-          setAchievementStats(getSessionStats());
-        }
       }
     } catch (err) {
       console.error('Error getting summary:', err);
-      showError('Failed to get session summary');
     }
-  };
-
-  // Check authentication on mount
-  useEffect(() => {
-    const authStatus = localStorage.getItem('isAuthenticated');
-    const userData = localStorage.getItem('user');
-
-    if (authStatus === 'true' && userData) {
-      setIsAuthenticated(true);
-      setCurrentUser(JSON.parse(userData));
-    }
-  }, []);
-
-  // Load session history on mount
-  useEffect(() => {
-    const history = getSessionHistory();
-    setSessionHistory(history);
-    setAchievementStats(getSessionStats());
-  }, []);
-
-  // Handle login success
-  const handleLoginSuccess = (userData) => {
-    setIsAuthenticated(true);
-    setCurrentUser(userData);
-    showSuccess(`Welcome ${userData.fullName || 'back'}!`);
-  };
-
-  // Handle logout
-  const handleLogout = () => {
-    localStorage.removeItem('isAuthenticated');
-    setIsAuthenticated(false);
-    setCurrentUser(null);
-    showInfo('Logged out successfully');
   };
 
   // Initialize on mount
@@ -749,19 +524,6 @@ function App() {
     value
   }));
 
-  // Practice topic handlers
-  const handleGetNewTopic = () => {
-    const topic = getRandomTopic('intermediate');
-    setCurrentPracticeTopic(topic);
-    setPracticeTopicActive(true);
-    showInfo(`Practice topic: ${topic}`);
-  };
-
-  const handleDismissTopic = () => {
-    setPracticeTopicActive(false);
-    setCurrentPracticeTopic('');
-  };
-
   // Export handlers
   const handleExportPDF = () => {
     const sessionData = {
@@ -784,7 +546,6 @@ function App() {
       timestamp: new Date().toLocaleString()
     };
     generatePDFReport(sessionData);
-    showSuccess('📄 PDF report generated successfully!');
   };
 
   const handleExportJSON = () => {
@@ -800,7 +561,6 @@ function App() {
       timestamp: new Date().toISOString()
     };
     exportToJSON(sessionData);
-    showSuccess('📊 JSON data exported successfully!');
   };
 
   const handleExportCSV = () => {
@@ -816,36 +576,18 @@ function App() {
       timestamp: new Date().toISOString()
     };
     exportToCSV(sessionData);
-    showSuccess('📈 CSV file exported successfully!');
   };
-
-  // Show login screen if not authenticated
-  if (!isAuthenticated) {
-    return <Login onLoginSuccess={handleLoginSuccess} />;
-  }
 
   return (
     <div className="App">
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="dark"
-      />
       <header className="App-header">
         <div className="header-content">
           <div className="header-left">
             <div className="logo-section">
               <div className="logo-icon">SS</div>
               <div className="logo-text">
-                <h1>SpeakSense.ai</h1>
-                <p className="subtitle">Master Your Voice, Command Any Stage</p>
+                <h1>SpeakSense AI</h1>
+                <p className="subtitle">AI-Powered Public Speaking Analysis</p>
               </div>
             </div>
           </div>
@@ -863,12 +605,6 @@ function App() {
                 <span className="info-label">Body Language</span>
                 <span className="info-value">{Math.round(bodyLanguageScore)}%</span>
               </div>
-            </div>
-          )}
-          {!isRecording && currentUser && (
-            <div className="user-info-header">
-              <span className="welcome-text">Welcome, {currentUser.fullName}!</span>
-              <button className="logout-btn" onClick={handleLogout}>Logout</button>
             </div>
           )}
         </div>
@@ -922,11 +658,6 @@ function App() {
                       style={{ display: 'none' }}
                     />
                   </label>
-                  {!practiceTopicActive && (
-                    <button className="btn btn-practice" onClick={handleGetNewTopic}>
-                      <span className="btn-icon">🎯</span> Get Practice Topic
-                    </button>
-                  )}
                   {isUploadMode && uploadedVideo && (
                     <button className="btn btn-clear" onClick={() => {
                       setIsUploadMode(false);
@@ -1131,222 +862,19 @@ function App() {
           </div>
 
           {/* Live Transcript */}
-          {isRecording && (
+          {transcript.length > 0 && (
             <div className="feedback-panel">
               <h3>
                 <span className="panel-icon">≡</span>
                 Live Transcript
               </h3>
               <div className="transcript-content">
-                {transcript.length === 0 ? (
-                  <p className="no-data">Listening... Start speaking to see your transcript here</p>
-                ) : (
-                  transcript.map((entry, index) => (
-                    <div key={index} className="transcript-segment">
-                      <span className="transcript-time">[{entry.timestamp}]</span>
-                      <span className="transcript-text">{entry.text}</span>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Grammar Issues */}
-          {isRecording && (
-            <div className="feedback-panel grammar-panel">
-              <h3>
-                <span className="panel-icon">✎</span>
-                Grammar Issues Detected
-              </h3>
-              <div className="feedback-content">
-                {grammarMistakes.length === 0 ? (
-                  <p className="no-data" style={{ color: '#2ecc71' }}>No grammar issues detected yet - Keep speaking!</p>
-                ) : (
-                  <div className="issue-list">
-                    {grammarMistakes.map((mistake, index) => (
-                      <div key={index} className="issue-item grammar-issue">
-                        <div className="issue-header">
-                          <span className="issue-text">"{mistake.text.trim()}"</span>
-                          <span className="issue-badge error">Error</span>
-                        </div>
-                        <div className="issue-description">{mistake.issue}</div>
-                        <div className="issue-suggestion">
-                          <span className="suggestion-label">Suggestion:</span>
-                          <span className="suggestion-text">{mistake.suggestion}</span>
-                        </div>
-                      </div>
-                    ))}
+                {transcript.map((entry, index) => (
+                  <div key={index} className="transcript-segment">
+                    <span className="transcript-time">[{entry.timestamp}]</span>
+                    <span className="transcript-text">{entry.text}</span>
                   </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Vocabulary Issues */}
-          {isRecording && (
-            <div className="feedback-panel vocabulary-panel">
-              <h3>
-                <span className="panel-icon">◈</span>
-                Vocabulary Enhancement
-              </h3>
-              <div className="feedback-content">
-                {vocabularyIssues.length === 0 ? (
-                  <p className="no-data" style={{ color: '#2ecc71' }}>Excellent vocabulary so far!</p>
-                ) : (
-                  <div className="issue-list">
-                    {vocabularyIssues.map((issue, index) => (
-                      <div key={index} className="issue-item vocabulary-issue">
-                        <div className="issue-header">
-                          <span className="issue-text">"{issue.text.trim()}"</span>
-                          <span className="issue-badge warning">Improve</span>
-                        </div>
-                        <div className="issue-description">{issue.issue}</div>
-                        <div className="issue-suggestion">
-                          <span className="suggestion-label">Tip:</span>
-                          <span className="suggestion-text">{issue.suggestion}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Sentiment Analysis Panel */}
-          {sentimentData && sentimentData.counts && (
-            <div className="feedback-panel sentiment-panel">
-              <h3>
-                <span className="panel-icon">🎭</span>
-                Speaking Tone Analysis
-              </h3>
-              <div className="feedback-content">
-                <div className="sentiment-grid">
-                  <div className="sentiment-item">
-                    <span className="sentiment-label">Overall Tone:</span>
-                    <span className={`sentiment-value sentiment-${sentimentData.overall}`}>
-                      {sentimentData.overall.toUpperCase()}
-                    </span>
-                  </div>
-                  <div className="sentiment-item">
-                    <span className="sentiment-label">Confidence Level:</span>
-                    <span className={`sentiment-value sentiment-${sentimentData.confidence}`}>
-                      {sentimentData.confidence.toUpperCase()}
-                    </span>
-                  </div>
-                  <div className="sentiment-stats">
-                    <div className="stat-row">
-                      <span>Positive words: {sentimentData.counts.positive || 0}</span>
-                      <span>Negative words: {sentimentData.counts.negative || 0}</span>
-                    </div>
-                    <div className="stat-row">
-                      <span>Confident phrases: {sentimentData.counts.confident || 0}</span>
-                      <span>Nervous indicators: {sentimentData.counts.nervous || 0}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Pause Analysis Panel */}
-          {pauseAnalysisData && pauseAnalysisData.averagePause !== undefined && (
-            <div className="feedback-panel pause-panel">
-              <h3>
-                <span className="panel-icon">⏸</span>
-                Pause & Timing Analysis
-              </h3>
-              <div className="feedback-content">
-                <div className="pause-stats">
-                  <div className="pause-stat-item">
-                    <div className="pause-stat-value">{(pauseAnalysisData.averagePause || 0).toFixed(1)}s</div>
-                    <div className="pause-stat-label">Average Pause</div>
-                  </div>
-                  <div className="pause-stat-item">
-                    <div className="pause-stat-value">{pauseAnalysisData.longPauses || 0}</div>
-                    <div className="pause-stat-label">Long Pauses (&gt;3s)</div>
-                  </div>
-                </div>
-                <div className="pause-recommendation">
-                  {pauseAnalysisData.recommendation || 'Analyzing pause patterns...'}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Practice Topic Banner */}
-          {practiceTopicActive && currentPracticeTopic && (
-            <div className="practice-topic-banner">
-              <h3>
-                <span className="panel-icon">🎯</span>
-                Practice Topic
-              </h3>
-              <div className="topic-content">
-                <p className="topic-text">{currentPracticeTopic}</p>
-                <div className="topic-actions">
-                  <button className="btn-topic" onClick={handleGetNewTopic}>
-                    New Topic
-                  </button>
-                  <button className="btn-topic btn-dismiss" onClick={handleDismissTopic}>
-                    Dismiss
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Session History Panel */}
-          {sessionHistory.length > 0 && !isRecording && (
-            <div className="feedback-panel history-panel">
-              <h3>
-                <span className="panel-icon">📊</span>
-                Recent Sessions
-              </h3>
-              <div className="feedback-content">
-                <div className="history-stats">
-                  {achievementStats && (
-                    <div className="stats-grid">
-                      <div className="stat-box-small">
-                        <div className="stat-number">{achievementStats.totalSessions || 0}</div>
-                        <div className="stat-label-small">Total Sessions</div>
-                      </div>
-                      <div className="stat-box-small">
-                        <div className="stat-number">{(achievementStats.averageScore || 0).toFixed(0)}</div>
-                        <div className="stat-label-small">Avg Score</div>
-                      </div>
-                      <div className="stat-box-small">
-                        <div className="stat-number">{achievementStats.bestScore || 0}</div>
-                        <div className="stat-label-small">Best Score</div>
-                      </div>
-                      <div className="stat-box-small">
-                        <div className="stat-number">
-                          {(achievementStats.improvement || 0) > 0 ? '+' : ''}{(achievementStats.improvement || 0).toFixed(0)}
-                        </div>
-                        <div className="stat-label-small">Improvement</div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className="history-list">
-                  {sessionHistory.slice(0, 5).map((session, index) => (
-                    <div key={session.id || index} className="history-item">
-                      <div className="history-item-header">
-                        <span className="history-score">{session.overallScore || 0}/100</span>
-                        <span className="history-date">
-                          {new Date(session.savedAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <div className="history-item-details">
-                        <span>{session.duration || 0}s</span>
-                        <span>•</span>
-                        <span>{session.speechAnalysis?.totalWords || 0} words</span>
-                        <span>•</span>
-                        <span>{(session.speechAnalysis?.fillerPercentage || 0).toFixed(1)}% fillers</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                ))}
               </div>
             </div>
           )}
@@ -1374,18 +902,15 @@ function App() {
                 <div className="score-details">
                   <div className="detail-item">
                     <span className="detail-label">Total Words:</span>
-                    <span className="detail-value">{overallScore.total_words || 0}</span>
+                    <span className="detail-value">{overallScore.total_words}</span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">Filler Words:</span>
-                    <span className="detail-value">
-                      {overallScore.filler_count || 0}
-                      ({(overallScore.filler_percentage || 0).toFixed(1)}%)
-                    </span>
+                    <span className="detail-value">{overallScore.filler_count} ({overallScore.filler_percentage}%)</span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">Frames Analyzed:</span>
-                    <span className="detail-value">{overallScore.frames_analyzed || 0}</span>
+                    <span className="detail-value">{overallScore.frames_analyzed}</span>
                   </div>
                   <div className="score-message">
                     {overallScore.overall_score >= 80 && "Excellent performance! Professional delivery with minimal issues."}
@@ -1425,7 +950,7 @@ function App() {
 
       {/* Copyright Footer */}
       <footer className="app-footer">
-        <p>© 2025 Naman Sharma. All rights reserved. | SpeakSense.ai - Empowering Better Communication</p>
+        <p>© 2025 Naman Sharma. All rights reserved. | SpeakSense AI - Empowering Better Communication</p>
       </footer>
     </div>
   );

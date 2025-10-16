@@ -1,0 +1,17 @@
+{
+  "name": "speaksense-login",
+  "version": "1.0.0",
+  "description": "Login page for SpeakSense.ai",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx http-server -p 3001 -o",
+    "dev": "npx http-server -p 3001 -o -c-1"
+  },
+  "keywords": [
+    "login",
+    "authentication",
+    "speaksense"
+  ],
+  "author": "Naman Sharma",
+  "license": "MIT"
+}

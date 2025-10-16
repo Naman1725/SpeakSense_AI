@@ -159,6 +159,81 @@ class GestureAnalyzer:
                 'timestamp': frame_timestamp
             })
 
+        # 7. Head scratching/touching (nervousness indicator)
+        left_ear = landmarks[mp_pose.PoseLandmark.LEFT_EAR]
+        right_ear = landmarks[mp_pose.PoseLandmark.RIGHT_EAR]
+
+        head_distance_left = np.sqrt((left_wrist.x - left_ear.x)**2 + (left_wrist.y - left_ear.y)**2)
+        head_distance_right = np.sqrt((right_wrist.x - right_ear.x)**2 + (right_wrist.y - right_ear.y)**2)
+
+        if head_distance_left < 0.12 or head_distance_right < 0.12:
+            gestures_detected.append({
+                'type': 'touching_head',
+                'severity': 'medium',
+                'message': 'Touching head/scratching - indicates nervousness',
+                'timestamp': frame_timestamp
+            })
+
+        # 8. Looking down (poor eye contact)
+        # Check if nose is significantly lower than normal (head tilted down)
+        if nose.y > left_shoulder.y - 0.05:
+            gestures_detected.append({
+                'type': 'looking_down',
+                'severity': 'medium',
+                'message': 'Looking down - maintain eye contact with audience',
+                'timestamp': frame_timestamp
+            })
+
+        # 9. Leaning to one side (asymmetric posture)
+        hip_center = (left_hip.x + right_hip.x) / 2
+        shoulder_center = (left_shoulder.x + right_shoulder.x) / 2
+
+        lean_amount = abs(hip_center - shoulder_center)
+        if lean_amount > 0.08:
+            gestures_detected.append({
+                'type': 'leaning',
+                'severity': 'low',
+                'message': 'Leaning to one side - stand balanced',
+                'timestamp': frame_timestamp
+            })
+
+        # 10. Hands on hips (can appear aggressive/defensive)
+        hip_distance_left = abs(left_wrist.x - left_hip.x) + abs(left_wrist.y - left_hip.y)
+        hip_distance_right = abs(right_wrist.x - right_hip.x) + abs(right_wrist.y - right_hip.y)
+
+        if hip_distance_left < 0.15 and hip_distance_right < 0.15:
+            gestures_detected.append({
+                'type': 'hands_on_hips',
+                'severity': 'medium',
+                'message': 'Hands on hips - can appear confrontational',
+                'timestamp': frame_timestamp
+            })
+
+        # 11. Slouching detection (rounded shoulders)
+        # Check if shoulders are forward relative to hips
+        shoulder_avg_z = (left_shoulder.z + right_shoulder.z) / 2 if hasattr(left_shoulder, 'z') else 0
+        hip_avg_z = (left_hip.z + right_hip.z) / 2 if hasattr(left_hip, 'z') else 0
+
+        if shoulder_avg_z > hip_avg_z + 0.05:
+            gestures_detected.append({
+                'type': 'slouching',
+                'severity': 'medium',
+                'message': 'Slouching posture - stand up straight',
+                'timestamp': frame_timestamp
+            })
+
+        # 12. Arms too stiff/rigid (not moving naturally)
+        left_elbow_angle_y = abs(left_shoulder.y - left_elbow.y)
+        right_elbow_angle_y = abs(right_shoulder.y - right_elbow.y)
+
+        if left_elbow_angle_y < 0.05 and right_elbow_angle_y < 0.05:
+            gestures_detected.append({
+                'type': 'stiff_arms',
+                'severity': 'low',
+                'message': 'Arms too stiff - relax and gesture naturally',
+                'timestamp': frame_timestamp
+            })
+
         return gestures_detected
 
     def analyze_hand_movements(self, hand_landmarks, frame_timestamp):
@@ -267,15 +342,99 @@ class GestureAnalyzer:
                     'timestamp': frame_timestamp
                 })
 
-        # 5. HANDS TOO CLOSE TOGETHER - Nervous gesture
-        # This would need multi-hand tracking, handled separately
+        # 5. FINGER TAPPING/DRUMMING - Nervous habit
+        # Check if fingers are close together and moving rapidly
+        fingertip_variance = np.var([index_tip.y, middle_tip.y, ring_tip.y, pinky_tip.y])
+        if fingertip_variance < 0.01 and avg_movement > 0.03:
+            gestures_detected.append({
+                'type': 'finger_tapping',
+                'severity': 'low',
+                'message': 'Finger tapping/drumming - indicates impatience or nervousness',
+                'timestamp': frame_timestamp
+            })
+
+        # 6. HAND WRINGING - Anxiety indicator
+        # Detect if fingers are intertwined or hands rubbing
+        thumb_index_distance = np.sqrt(
+            (thumb_tip.x - index_tip.x)**2 +
+            (thumb_tip.y - index_tip.y)**2
+        )
+        if thumb_index_distance < 0.05 and fingers_extended:
+            gestures_detected.append({
+                'type': 'hand_wringing',
+                'severity': 'medium',
+                'message': 'Hand wringing/rubbing - shows anxiety',
+                'timestamp': frame_timestamp
+            })
+
+        # 7. COVERING MOUTH - Insecurity gesture
+        # Check if hand is near mouth area
+        mouth_distance = np.sqrt(
+            (wrist.x - 0.5)**2 +  # Approximate mouth x position (center)
+            (wrist.y - palm_center_y - 0.3)**2  # Approximate mouth y position
+        )
+        if mouth_distance < 0.15 and palm_center_y < 0.5:
+            gestures_detected.append({
+                'type': 'covering_mouth',
+                'severity': 'medium',
+                'message': 'Hand near mouth - can appear insecure or dishonest',
+                'timestamp': frame_timestamp
+            })
+
+        # 8. PEACE/V-SIGN - Unprofessional in formal settings
+        index_middle_extended = (
+            index_tip.y < index_mcp.y - 0.05 and
+            middle_tip.y < middle_mcp.y - 0.05
+        )
+        ring_pinky_curled = (
+            ring_tip.y > ring_mcp.y and
+            pinky_tip.y > pinky_mcp.y
+        )
+        if index_middle_extended and ring_pinky_curled:
+            gestures_detected.append({
+                'type': 'peace_sign',
+                'severity': 'low',
+                'message': 'Peace/V-sign - unprofessional in formal presentations',
+                'timestamp': frame_timestamp
+            })
 
         return gestures_detected
 
 
 class SpeechAnalyzer:
     def __init__(self):
-        self.filler_words = ['um', 'uh', 'like', 'you know', 'so', 'actually', 'basically', 'literally', 'kind of', 'sort of']
+        # Comprehensive filler words list - 50+ common fillers!
+        self.filler_words = [
+            # Classic fillers
+            'um', 'uh', 'er', 'ah', 'hmm', 'mhm', 'uh-huh',
+
+            # Discourse markers
+            'like', 'you know', 'i mean', 'you see', 'you know what i mean',
+            'you know what', 'know what i mean', 'right', 'okay', 'ok',
+
+            # Hedging phrases
+            'kind of', 'sort of', 'kinda', 'sorta', 'type of', 'a bit',
+            'somewhat', 'pretty much', 'more or less', 'in a way',
+
+            # Overused intensifiers
+            'actually', 'basically', 'literally', 'seriously', 'honestly',
+            'really', 'very', 'totally', 'absolutely', 'definitely',
+            'completely', 'extremely', 'super',
+
+            # Stalling phrases
+            'well', 'so', 'anyways', 'anyway', 'anyhow', 'like i said',
+            'as i mentioned', 'you know', 'i guess', 'i suppose',
+            'i think', 'i feel', 'i believe',
+
+            # Redundant phrases
+            'at the end of the day', 'to be honest', 'to be fair',
+            'if you will', 'so to speak', 'you see what i mean',
+            'does that make sense', 'am i making sense',
+
+            # Time fillers
+            'just', 'then', 'now', 'and stuff', 'or something',
+            'whatever', 'things like that', 'and so on', 'et cetera', 'etc'
+        ]
         self.word_count = 0
         self.filler_count = 0
         self.start_time = None

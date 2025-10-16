@@ -83,7 +83,25 @@ SpeakSense.ai is an intelligent communication analysis platform that leverages a
 
 ## 🚀 Getting Started
 
-### Prerequisites
+### 🎭 Quick Demo (No Installation Required)
+
+Want to see the UI without installing anything? Check out our **[Standalone Demo](./standalone-demo)**!
+
+- ✅ Pure HTML/CSS/JS - works directly in your browser
+- ✅ Beautiful login page with social auth UI
+- ✅ Pre-loaded demo dashboard with sample data
+- ✅ Embedded YouTube demo video
+- ✅ Perfect for quick previews and portfolio showcasing
+
+**[Open Standalone Demo →](./standalone-demo/index.html)**
+
+> **Note**: The standalone demo is frontend-only. For full AI analysis, follow the installation below.
+
+---
+
+### Full Installation
+
+#### Prerequisites
 - **Python 3.11+**
 - **Node.js 16+**
 - **npm or yarn**

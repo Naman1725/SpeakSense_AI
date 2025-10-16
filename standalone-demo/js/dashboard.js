@@ -10,13 +10,21 @@ window.addEventListener('load', function() {
         document.querySelector('.welcome-text').textContent = `Welcome, ${user.name}!`;
     }
 
-    // Show demo notice modal automatically
-    showDemoNotice();
+    // Show demo notice modal automatically on first load
+    const modalShown = sessionStorage.getItem('modalShown');
+    if (!modalShown) {
+        showDemoNotice();
+        sessionStorage.setItem('modalShown', 'true');
+    }
 });
 
 // Show demo notice modal
 function showDemoNotice() {
     const modal = document.getElementById('demoNotice');
+    if (modal.style.display === 'flex') {
+        // Modal already showing, don't show again
+        return;
+    }
     modal.style.display = 'flex';
 }
 

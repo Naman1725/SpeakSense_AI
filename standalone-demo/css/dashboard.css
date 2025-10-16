@@ -734,6 +734,31 @@ body {
     color: #94a3b8;
 }
 
+/* WPM Chart */
+.wpm-chart {
+    background: rgba(51, 65, 85, 0.3);
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.pace-chart-svg {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.pace-feedback {
+    margin-top: 12px;
+    padding: 12px;
+    background: rgba(16, 185, 129, 0.1);
+    border-left: 3px solid #10b981;
+    border-radius: 6px;
+    color: #10b981;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 0;
+}
+
 /* Timeline Chart */
 .timeline-chart {
     position: relative;

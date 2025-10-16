@@ -158,9 +158,59 @@
                         <i class="fas fa-chart-line"></i>
                         Speaking Pace Analysis
                     </h3>
-                    <div class="chart-placeholder">
-                        <img src="https://via.placeholder.com/500x200/667eea/ffffff?text=Sample+Chart+Data" alt="Sample Chart">
-                        <p class="chart-caption">Real-time charts available in full version</p>
+                    <div class="wpm-chart">
+                        <svg viewBox="0 0 500 200" class="pace-chart-svg">
+                            <!-- Grid lines -->
+                            <line x1="40" y1="20" x2="40" y2="180" stroke="rgba(148,163,184,0.3)" stroke-width="2"/>
+                            <line x1="40" y1="180" x2="480" y2="180" stroke="rgba(148,163,184,0.3)" stroke-width="2"/>
+
+                            <!-- Y-axis labels -->
+                            <text x="25" y="25" fill="#94a3b8" font-size="10">200</text>
+                            <text x="25" y="65" fill="#94a3b8" font-size="10">160</text>
+                            <text x="25" y="105" fill="#94a3b8" font-size="10">120</text>
+                            <text x="25" y="145" fill="#94a3b8" font-size="10">80</text>
+                            <text x="25" y="185" fill="#94a3b8" font-size="10">40</text>
+
+                            <!-- X-axis labels -->
+                            <text x="50" y="195" fill="#94a3b8" font-size="10">0s</text>
+                            <text x="140" y="195" fill="#94a3b8" font-size="10">15s</text>
+                            <text x="230" y="195" fill="#94a3b8" font-size="10">30s</text>
+                            <text x="320" y="195" fill="#94a3b8" font-size="10">45s</text>
+                            <text x="410" y="195" fill="#94a3b8" font-size="10">60s</text>
+
+                            <!-- Area gradient -->
+                            <defs>
+                                <linearGradient id="wpmGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#667eea;stop-opacity:0.6" />
+                                    <stop offset="100%" style="stop-color:#667eea;stop-opacity:0.1" />
+                                </linearGradient>
+                            </defs>
+
+                            <!-- Area fill -->
+                            <path d="M 40 140 L 90 120 L 140 100 L 190 110 L 240 95 L 290 105 L 340 90 L 390 85 L 440 95 L 480 90 L 480 180 L 40 180 Z"
+                                  fill="url(#wpmGradient)" />
+
+                            <!-- Line -->
+                            <path d="M 40 140 L 90 120 L 140 100 L 190 110 L 240 95 L 290 105 L 340 90 L 390 85 L 440 95 L 480 90"
+                                  fill="none"
+                                  stroke="#667eea"
+                                  stroke-width="3"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"/>
+
+                            <!-- Data points -->
+                            <circle cx="40" cy="140" r="4" fill="#667eea" stroke="white" stroke-width="2"/>
+                            <circle cx="90" cy="120" r="4" fill="#667eea" stroke="white" stroke-width="2"/>
+                            <circle cx="140" cy="100" r="4" fill="#667eea" stroke="white" stroke-width="2"/>
+                            <circle cx="190" cy="110" r="4" fill="#667eea" stroke="white" stroke-width="2"/>
+                            <circle cx="240" cy="95" r="4" fill="#667eea" stroke="white" stroke-width="2"/>
+                            <circle cx="290" cy="105" r="4" fill="#667eea" stroke="white" stroke-width="2"/>
+                            <circle cx="340" cy="90" r="4" fill="#667eea" stroke="white" stroke-width="2"/>
+                            <circle cx="390" cy="85" r="4" fill="#667eea" stroke="white" stroke-width="2"/>
+                            <circle cx="440" cy="95" r="4" fill="#667eea" stroke="white" stroke-width="2"/>
+                            <circle cx="480" cy="90" r="4" fill="#667eea" stroke="white" stroke-width="2"/>
+                        </svg>
+                        <p class="pace-feedback">Good pace - Maintain steady rhythm between 130-160 WPM</p>
                     </div>
                 </div>
 

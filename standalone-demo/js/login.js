@@ -42,26 +42,26 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
 const oauthConfig = {
     google: {
         clientId: 'YOUR_GOOGLE_CLIENT_ID',
-        name: prompt('Enter your name for Google login:') || 'Google User'
+        displayName: 'Google User'
     },
     github: {
         clientId: 'YOUR_GITHUB_CLIENT_ID',
-        name: prompt('Enter your name for GitHub login:') || 'GitHub User'
+        displayName: 'GitHub User'
     },
     linkedin: {
         clientId: 'YOUR_LINKEDIN_CLIENT_ID',
-        name: prompt('Enter your name for LinkedIn login:') || 'LinkedIn User'
+        displayName: 'LinkedIn User'
     },
     facebook: {
         clientId: 'YOUR_FACEBOOK_APP_ID',
-        name: prompt('Enter your name for Facebook login:') || 'Facebook User'
+        displayName: 'Facebook User'
     }
 };
 
 // Handle social login
 function socialLogin(provider) {
-    // Get user's name via prompt (in demo mode)
-    const userName = oauthConfig[provider].name;
+    // Use default display name (no prompt)
+    const userName = oauthConfig[provider].displayName;
 
     // Store user data with actual name from OAuth
     const userData = {

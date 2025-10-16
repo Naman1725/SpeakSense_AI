@@ -11,15 +11,18 @@ SpeakSense.ai is an intelligent communication analysis platform that leverages a
 ## 📸 Screenshots
 
 ### 🔐 Login Page
-![Login Page](docs/images/login.png)
+<img width="922" height="540" alt="image" src="https://github.com/user-attachments/assets/9bfe7e87-72e8-48d9-92f4-5b0cbd0126c5" />
+
 *Secure authentication with user profile creation*
 
 ### 🎯 Real-time Analysis
-![Live Analysis](docs/images/analysis.png)
+<img width="1112" height="558" alt="image" src="https://github.com/user-attachments/assets/dcfb4978-b8cc-4823-ac8b-513873792f2e" />
+
 *AI-powered body language and speech analysis with live feedback*
 
 ### 📊 Performance Report
-![Performance Report](docs/images/report.png)
+<img width="1910" height="990" alt="image" src="https://github.com/user-attachments/assets/e8a894a7-9ba9-4f9e-83e2-6b2279a99013" />
+
 *Comprehensive performance metrics and exportable reports*
 
 ---
